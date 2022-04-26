@@ -46,7 +46,7 @@ logger.addHandler(handler)
 
 
 def send_message(bot: Bot, message: str) -> None:
-    """Sending message from bot (instance of Bot class)
+    """Sending message from bot (instance of Bot class).
     to chat (TELEGRAM_CHAT_ID)
 
     Args:
@@ -69,7 +69,7 @@ def send_message(bot: Bot, message: str) -> None:
 
 
 def get_api_answer(current_timestamp: int) -> dict:
-    """Requesting answer from api (ENDPOINT url)
+    """Requesting answer from api (ENDPOINT url).
 
     Args:
         current_timestamp: (int): Unix timestamp
@@ -95,7 +95,7 @@ def get_api_answer(current_timestamp: int) -> dict:
 
 
 def check_response(response: dict) -> list:
-    """Check response from get_api_answer function
+    """Check response from get_api_answer function.
 
     Args:
         response (dict): response from api request (function get_api_answer)
@@ -120,8 +120,7 @@ def check_response(response: dict) -> list:
 
 
 def parse_status(homework: dict) -> str:
-    """
-    Parse status from homework
+    """Parse status from homework.
 
     Args:
         homework (dict): information about homework (name, status and so on)
@@ -151,18 +150,22 @@ def parse_status(homework: dict) -> str:
 
 
 def check_tokens():
-    """
+    """Check if tokens are available.
 
     Returns:
-        bool: True if all tokens available, False if something is missing
+        bool: True if all tokens available, False if something is missing.
 
     """
     return all(TOKEN_DICT.values())
 
 
 def main():
-    """
-
+    """Main function of bot.
+    1. Requesting api answer - get_api_answer function
+    2. Check answer - check_response function
+    3. Parse status of homework - parse_status
+    4. Sending message to user if status was updated
+    
     Returns:
         None
     Raises:
