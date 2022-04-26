@@ -113,7 +113,7 @@ def check_response(response: dict) -> list:
 
     """
     if not isinstance(response['homeworks'], list):
-        message = f'Ответ с домашними заданиями пришел не в виде списка'
+        message = 'Ответ с домашними заданиями пришел не в виде списка'
         logger.error(message)
         raise Exception(message)
     try:
