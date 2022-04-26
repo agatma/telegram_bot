@@ -165,7 +165,7 @@ def check_tokens():
         bool: True if all tokens available, False if something is missing.
 
     """
-    return all(list(TOKEN_DICT.values()))
+    return all([TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, PRACTICUM_TOKEN])
 
 
 def main():
