@@ -115,7 +115,7 @@ def check_response(response: dict) -> list:
     if not isinstance(response['homeworks'], list):
         message = 'Ответ с домашними заданиями пришел не в виде списка'
         logger.error(message)
-        raise Exception(message)
+        raise TypeError(message)
     try:
         return response['homeworks']
     except KeyError as error:

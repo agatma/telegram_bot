@@ -13,10 +13,13 @@ from telegram import ReplyKeyboardMarkup
 
 load_dotenv()
 
+PRACTICUM_TOKEN = 'sometoken'
+TELEGRAM_TOKEN = '1234:abcdefg'
+TELEGRAM_CHAT_ID = None
 
-PRACTICUM_TOKEN = os.getenv('PRAKTIKUM_TOKEN')
-TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
-TELEGRAM_CHAT_ID = os.getenv('CHAT_ID')
+# PRACTICUM_TOKEN = os.getenv('PRAKTIKUM_TOKEN')
+# TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+# TELEGRAM_CHAT_ID = os.getenv('CHAT_ID')
 
 RETRY_TIME = 600
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_fstatuses/'
@@ -32,7 +35,6 @@ TOKEN_DICT = {
     'TELEGRAM_TOKEN': TELEGRAM_TOKEN,
     'TELEGRAM_CHAT_ID': TELEGRAM_CHAT_ID,
 }
-print()
 
 def check_tokens():
     """Check if tokens are available.
@@ -41,14 +43,15 @@ def check_tokens():
         bool: True if all tokens available, False if something is missing.
 
     """
+    print(all(list(TOKEN_DICT.values())))
     return all(list(TOKEN_DICT.values()))
 
-def get_api_answer(current_timestamp):
-    timestamp = current_timestamp or int(time.time())
-    params = {'from_date': timestamp}
-    homework_status = requests.get(ENDPOINT, headers=HEADERS, params=params)
-
-    return homework_status.json()
+# def get_api_answer(current_timestamp):
+#     timestamp = current_timestamp or int(time.time())
+#     params = {'from_date': timestamp}
+#     homework_status = requests.get(ENDPOINT, headers=HEADERS, params=params)
+#
+#     return homework_status.json()
 
 
     # if homework_status.status_code == 200:
@@ -58,7 +61,7 @@ def get_api_answer(current_timestamp):
     #                f'вернул код {homework_status.status_code}')
     #     raise Exception(message)
 
-print(get_api_answer(1587719772))
+# print(get_api_answer(1587719772))
 
 print(check_tokens())
 #
