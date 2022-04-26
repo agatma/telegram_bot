@@ -27,19 +27,21 @@ HOMEWORK_STATUSES = {
     'reviewing': 'Работа взята на проверку ревьюером.',
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
 }
+TOKEN_DICT = {
+    'PRACTICUM_TOKEN': PRACTICUM_TOKEN,
+    'TELEGRAM_TOKEN': TELEGRAM_TOKEN,
+    'TELEGRAM_CHAT_ID': TELEGRAM_CHAT_ID,
+}
+print()
 
 def check_tokens():
-    CHECK_ENV_VARS = {
-        'PRACTICUM_TOKEN': PRACTICUM_TOKEN,
-        'TELEGRAM_TOKEN': TELEGRAM_TOKEN,
-        'TELEGRAM_CHAT_ID': TELEGRAM_CHAT_ID,
-    }
-    if all(CHECK_ENV_VARS.values()):
-        return True
-    else:
-        result = [k for k, v in CHECK_ENV_VARS.items() if v is None]
-        message = f'Отсутствует обязательная переменная окружения: {result}. Программа остановлена'
-        raise Exception(message)
+    """Check if tokens are available.
+
+    Returns:
+        bool: True if all tokens available, False if something is missing.
+
+    """
+    return all(list(TOKEN_DICT.values()))
 
 def get_api_answer(current_timestamp):
     timestamp = current_timestamp or int(time.time())

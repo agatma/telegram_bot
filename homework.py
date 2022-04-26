@@ -83,11 +83,17 @@ def get_api_answer(current_timestamp: int) -> dict:
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
     homework_status = requests.get(ENDPOINT, headers=HEADERS, params=params)
+    if homework_status.status_code != 200:
+        message = (f'Ошибка при запросе к основному API. Эндпоинт {ENDPOINT}'
+                   f'вернул код {homework_status.status_code}, '
+                   f'а должен был 200')
+        logger.error(message)
+        raise Exception(message)
     try:
         return dict(homework_status.json())
     except Exception as error:
         message = (f'Ошибка при запросе к основному API. Эндпоинт {ENDPOINT}'
-                   f'вернул код {homework_status.status_code}.'
+                   f'Не удалось привести API ответ к типу данных python.'
                    f'Описание ошибки {error}')
         logger.error(message)
         raise Exception(message)
@@ -106,6 +112,10 @@ def check_response(response: dict) -> list:
         Exception: An error occurred during api response check
 
     """
+    if not isinstance(response['homeworks'], list):
+        message = f'Ответ с домашними заданиями пришел не в виде списка'
+        logger.error(message)
+        raise Exception(message)
     try:
         return response['homeworks']
     except KeyError as error:
@@ -115,7 +125,7 @@ def check_response(response: dict) -> list:
     except Exception as error:
         message = f'Ошибка в функции check_response. Описание {error}'
         logger.error(message)
-        raise KeyError(message)
+        raise Exception(message)
 
 
 def parse_status(homework: dict) -> str:
@@ -155,7 +165,7 @@ def check_tokens():
         bool: True if all tokens available, False if something is missing.
 
     """
-    return all(TOKEN_DICT.values())
+    return all(list(TOKEN_DICT.values()))
 
 
 def main():
