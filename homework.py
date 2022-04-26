@@ -16,7 +16,6 @@ RETRY_TIME = 600
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
-
 HOMEWORK_STATUSES = {
     'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
     'reviewing': 'Работа взята на проверку ревьюером.',
@@ -24,9 +23,9 @@ HOMEWORK_STATUSES = {
 }
 
 TOKEN_DICT = {
-        'PRACTICUM_TOKEN': PRACTICUM_TOKEN,
-        'TELEGRAM_TOKEN': TELEGRAM_TOKEN,
-        'TELEGRAM_CHAT_ID': TELEGRAM_CHAT_ID,
+    'PRACTICUM_TOKEN': PRACTICUM_TOKEN,
+    'TELEGRAM_TOKEN': TELEGRAM_TOKEN,
+    'TELEGRAM_CHAT_ID': TELEGRAM_CHAT_ID,
 }
 
 logging.basicConfig(
@@ -165,9 +164,10 @@ def main():
     2. Check answer - check_response function
     3. Parse status of homework - parse_status
     4. Sending message to user if status was updated
-    
+
     Returns:
         None
+
     Raises:
         Exception: An error occurred during main function
     """
@@ -188,7 +188,7 @@ def main():
                 message = 'В данный момент работ на проверке нет. Отдыхай'
                 send_message(bot, message)
                 logger.debug(f'В ответе нет новых работ')
-                logger.info(f'Бот отправил сообщение: "{message}"')
+                logger.info('Бот отправил сообщение: "{}"'.format(message))
                 break
             elif not response.get('status') == 'reviewing':
                 message = parse_status(check_response_result[0])
