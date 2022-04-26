@@ -187,8 +187,8 @@ def main():
             if not check_response_result:
                 message = 'В данный момент работ на проверке нет. Отдыхай'
                 send_message(bot, message)
-                logger.debug(f'В ответе нет новых работ')
-                logger.info('Бот отправил сообщение: "{}"'.format(message))
+                logger.debug('В ответе нет новых работ')
+                logger.info(f'Бот отправил сообщение: "{message}"')
                 break
             elif not response.get('status') == 'reviewing':
                 message = parse_status(check_response_result[0])
