@@ -3,7 +3,7 @@ import logging
 import time
 import os
 import telegram
-from telegram.ext import Updater, CommandHandler
+from telegram import Bot
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -45,7 +45,21 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-def send_message(bot, message):
+def send_message(bot: Bot, message: str) -> None:
+    """Sending message from bot (instance of Bot class)
+    to chat (TELEGRAM_CHAT_ID)
+
+    Args:
+        bot: class Bot(TelegramObject) instance
+        message (str): message to telegram chat
+
+    Returns:
+        None
+
+    Raises:
+        Exception: An error occurred during sending message to telegram chat
+
+    """
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
     except Exception as error:
@@ -54,12 +68,24 @@ def send_message(bot, message):
         raise Exception(message)
 
 
-def get_api_answer(current_timestamp):
+def get_api_answer(current_timestamp: int) -> dict:
+    """Requesting answer from api (ENDPOINT url)
+
+    Args:
+        current_timestamp: (int): Unix timestamp
+
+    Returns:
+        dict: Result of api request to ENDPOINT
+
+    Raises:
+        Exception: An error occurred during api request
+
+    """
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
     homework_status = requests.get(ENDPOINT, headers=HEADERS, params=params)
     try:
-        return homework_status.json()
+        return dict(homework_status.json())
     except Exception as error:
         message = (f'Ошибка при запросе к основному API. Эндпоинт {ENDPOINT}'
                    f'вернул код {homework_status.status_code}.'
@@ -68,11 +94,23 @@ def get_api_answer(current_timestamp):
         raise Exception(message)
 
 
-def check_response(response):
+def check_response(response: dict) -> list:
+    """Check response from get_api_answer function
+
+    Args:
+        response (dict): response from api request (function get_api_answer)
+
+    Returns:
+        list: list of available homeworks (possible to empty list)
+
+    Raises:
+        Exception: An error occurred during api response check
+
+    """
     try:
         return response['homeworks']
     except KeyError as error:
-        message = f'Ключ {error} не присутствует в словаре. Должен быть homeworks'
+        message = f'Ключ {error} не присутствует в словаре'
         logger.error(message)
         raise KeyError(message)
     except Exception as error:
@@ -81,15 +119,29 @@ def check_response(response):
         raise KeyError(message)
 
 
-def parse_status(homework):
-    homework = homework[0]
+def parse_status(homework: dict) -> str:
+    """
+    Parse status from homework
+
+    Args:
+        homework (dict): information about homework (name, status and so on)
+
+    Returns:
+        str: Message for user
+    Raises:
+        KeyError: An error occurred during getting value
+        from the key in HOMEWORK_STATUSES dict
+        Exception: Another error occurred during parsing status
+
+    """
     homework_name = homework.get('homework_name')
     homework_status = homework.get('status')
     try:
         verdict = HOMEWORK_STATUSES[homework_status]
         return f'Изменился статус проверки работы "{homework_name}". {verdict}'
     except KeyError:
-        message = f'Ключ {homework_status} не присутствует в словаре HOMEWORK_STATUSES'
+        message = (f'Ключ {homework_status} не присутствует '
+                   f'в словаре HOMEWORK_STATUSES')
         logger.error(message)
         raise KeyError(message)
     except Exception as error:
@@ -99,14 +151,27 @@ def parse_status(homework):
 
 
 def check_tokens():
+    """
+
+    Returns:
+        bool: True if all tokens available, False if something is missing
+
+    """
     return all(TOKEN_DICT.values())
 
 
 def main():
-    """Основная логика работы бота."""
+    """
+
+    Returns:
+        None
+    Raises:
+        Exception: An error occurred during main function
+    """
     if not check_tokens():
         result = [k for k, v in TOKEN_DICT.items() if v is None]
-        message = f'Отсутствует обязательная переменная окружения: {result}. Программа остановлена'
+        message = (f'Отсутствует обязательная переменная окружения: {result}.'
+                   f'Программа остановлена')
         logger.critical(message)
         raise Exception(message)
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
@@ -123,7 +188,7 @@ def main():
                 logger.info(f'Бот отправил сообщение: "{message}"')
                 break
             elif not response.get('status') == 'reviewing':
-                message = parse_status(check_response_result)
+                message = parse_status(check_response_result[0])
                 send_message(bot, message)
                 logger.info(f'Бот отправил сообщение: "{message}"')
                 break
@@ -131,7 +196,8 @@ def main():
             time.sleep(RETRY_TIME)
         except Exception as error:
             if last_error['error'] == error.args:
-                message = f'Ошибка {error} по-прежнему не решена. Программу останавливаем'
+                message = (f'Ошибка {error} по-прежнему не решена. '
+                           f'Программу останавливаем')
                 logger.error(message)
                 send_message(bot, message)
                 raise Exception(message)
