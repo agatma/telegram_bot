@@ -71,7 +71,9 @@ def get_api_answer(current_timestamp: int) -> dict[str, Union[list, int]]:
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
     try:
-        homework_status = requests.get(ENDPOINT, headers=HEADERS, params=params)
+        homework_status = requests.get(
+            ENDPOINT, headers=HEADERS, params=params
+        )
     except Exception as error:
         message = (f'Ошибка при запросе к основному API. '
                    f'Описание ошибки {error}')
