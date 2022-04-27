@@ -1,10 +1,12 @@
 import requests
-import logging
 import time
 import os
 import telegram
 from telegram import Bot
 from dotenv import load_dotenv
+from utils import init_logger
+from http import HTTPStatus
+from typing import Union
 
 load_dotenv()
 
@@ -15,33 +17,19 @@ TELEGRAM_CHAT_ID = os.getenv('CHAT_ID')
 RETRY_TIME = 600
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
-
+REVIEWING = 'reviewing'
 HOMEWORK_STATUSES = {
     'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
-    'reviewing': 'Работа взята на проверку ревьюером.',
+    REVIEWING: 'Работа взята на проверку ревьюером.',
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
 }
 
-TOKEN_DICT = {
+TOKENS = {
     'PRACTICUM_TOKEN': PRACTICUM_TOKEN,
     'TELEGRAM_TOKEN': TELEGRAM_TOKEN,
     'TELEGRAM_CHAT_ID': TELEGRAM_CHAT_ID,
 }
-
-logging.basicConfig(
-    level=logging.DEBUG,
-    filename='api_bot.log',
-    format='%(asctime)s, %(levelname)s, %(message)s, %(name)s'
-)
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-handler = logging.StreamHandler()
-formatter = logging.Formatter(
-    '%(asctime)s %(levelname)s %(message)s'
-)
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+logger = init_logger()
 
 
 def send_message(bot: Bot, message: str) -> None:
@@ -67,7 +55,7 @@ def send_message(bot: Bot, message: str) -> None:
         raise Exception(message)
 
 
-def get_api_answer(current_timestamp: int) -> dict:
+def get_api_answer(current_timestamp: int) -> dict[str, Union[list, int]]:
     """Requesting answer from api (ENDPOINT url).
 
     Args:
@@ -82,24 +70,30 @@ def get_api_answer(current_timestamp: int) -> dict:
     """
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
-    homework_status = requests.get(ENDPOINT, headers=HEADERS, params=params)
-    if homework_status.status_code != 200:
+    try:
+        homework_status = requests.get(ENDPOINT, headers=HEADERS, params=params)
+    except Exception as error:
+        message = (f'Ошибка при запросе к основному API. '
+                   f'Описание ошибки {error}')
+        logger.error(message)
+        raise Exception(message)
+    if homework_status.status_code != HTTPStatus.OK:
         message = (f'Ошибка при запросе к основному API. Эндпоинт {ENDPOINT}'
                    f'вернул код {homework_status.status_code}, '
-                   f'а должен был 200')
+                   f'а должен был {HTTPStatus.OK}')
         logger.error(message)
         raise Exception(message)
     try:
-        return dict(homework_status.json())
-    except Exception as error:
+        return homework_status.json()
+    except ValueError as error:
         message = (f'Ошибка при запросе к основному API. Эндпоинт {ENDPOINT}'
                    f'Не удалось привести API ответ к типу данных python.'
                    f'Описание ошибки {error}')
         logger.error(message)
-        raise Exception(message)
+        raise ValueError(message)
 
 
-def check_response(response: dict) -> list:
+def check_response(response: dict[str, Union[list, int]]) -> list[dict]:
     """Check response from get_api_answer function.
 
     Args:
@@ -122,13 +116,9 @@ def check_response(response: dict) -> list:
         message = f'Ключ {error} не присутствует в словаре'
         logger.error(message)
         raise KeyError(message)
-    except Exception as error:
-        message = f'Ошибка в функции check_response. Описание {error}'
-        logger.error(message)
-        raise Exception(message)
 
 
-def parse_status(homework: dict) -> str:
+def parse_status(homework: dict[str, Union[str, int]]) -> str:
     """Parse status from homework.
 
     Args:
@@ -152,13 +142,9 @@ def parse_status(homework: dict) -> str:
                    f'в словаре HOMEWORK_STATUSES')
         logger.error(message)
         raise KeyError(message)
-    except Exception as error:
-        message = f'Ошибка в функции parse_status. Описание {error}'
-        logger.error(message)
-        raise KeyError(message)
 
 
-def check_tokens():
+def check_tokens() -> bool:
     """Check if tokens are available.
 
     Returns:
@@ -182,7 +168,7 @@ def main():
         Exception: An error occurred during main function
     """
     if not check_tokens():
-        result = [k for k, v in TOKEN_DICT.items() if v is None]
+        result = [k for k, v in TOKENS.items() if v is None]
         message = (f'Отсутствует обязательная переменная окружения: {result}.'
                    f'Программа остановлена')
         logger.critical(message)
@@ -199,27 +185,26 @@ def main():
                 send_message(bot, message)
                 logger.debug('В ответе нет новых работ')
                 logger.info(f'Бот отправил сообщение: "{message}"')
-                break
-            elif not response.get('status') == 'reviewing':
+                continue
+            elif not response.get('status') == REVIEWING:
                 message = parse_status(check_response_result[0])
                 send_message(bot, message)
                 logger.info(f'Бот отправил сообщение: "{message}"')
-                break
+                continue
             current_timestamp = response.get('current_date')
-            time.sleep(RETRY_TIME)
         except Exception as error:
             if last_error['error'] == error.args:
                 message = (f'Ошибка {error} по-прежнему не решена. '
                            f'Программу останавливаем')
                 logger.error(message)
                 send_message(bot, message)
-                raise Exception(message)
             else:
                 last_error['error'] = error.args
                 message = f'Сбой в работе программы: {error}'
                 send_message(bot, message)
                 logger.info(f'Бот отправил сообщение: "{message}"')
-                time.sleep(RETRY_TIME)
+        finally:
+            time.sleep(RETRY_TIME)
 
 
 if __name__ == '__main__':
