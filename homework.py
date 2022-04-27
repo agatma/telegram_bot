@@ -2,9 +2,9 @@ import requests
 import time
 import os
 import telegram
+import logging
 from telegram import Bot
 from dotenv import load_dotenv
-from utils import init_logger
 from http import HTTPStatus
 from typing import Union
 
@@ -29,6 +29,26 @@ TOKENS = {
     'TELEGRAM_TOKEN': TELEGRAM_TOKEN,
     'TELEGRAM_CHAT_ID': TELEGRAM_CHAT_ID,
 }
+
+
+def init_logger():
+    logging.basicConfig(
+        level=logging.DEBUG,
+        filename='api_bot.log',
+        format='%(asctime)s, %(levelname)s, %(message)s, %(name)s'
+    )
+
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter(
+        '%(asctime)s %(levelname)s %(message)s'
+    )
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    return logger
+
+
 logger = init_logger()
 
 
