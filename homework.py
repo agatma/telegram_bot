@@ -32,6 +32,11 @@ TOKENS = {
 
 
 def init_logger():
+    """Initiating and creating instance of logger object.
+
+    Returns: logger object
+
+    """
     logging.basicConfig(
         level=logging.DEBUG,
         filename='api_bot.log',
