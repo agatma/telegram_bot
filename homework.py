@@ -6,7 +6,7 @@ import logging
 from telegram import Bot
 from dotenv import load_dotenv
 from http import HTTPStatus
-from typing import Union
+from typing import Union, List, Dict
 
 load_dotenv()
 
@@ -80,7 +80,7 @@ def send_message(bot: Bot, message: str) -> None:
         raise Exception(message)
 
 
-def get_api_answer(current_timestamp: int) -> dict[str, Union[list, int]]:
+def get_api_answer(current_timestamp: int) -> Dict[str, Union[List, int]]:
     """Requesting answer from api (ENDPOINT url).
 
     Args:
@@ -120,7 +120,7 @@ def get_api_answer(current_timestamp: int) -> dict[str, Union[list, int]]:
         raise ValueError(message)
 
 
-def check_response(response: dict[str, Union[list, int]]) -> list[dict]:
+def check_response(response: Dict[str, Union[List, int]]) -> List[Dict]:
     """Check response from get_api_answer function.
 
     Args:
@@ -145,7 +145,7 @@ def check_response(response: dict[str, Union[list, int]]) -> list[dict]:
         raise KeyError(message)
 
 
-def parse_status(homework: dict[str, Union[str, int]]) -> str:
+def parse_status(homework: Dict[str, Union[str, int]]) -> str:
     """Parse status from homework.
 
     Args:
