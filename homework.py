@@ -17,11 +17,15 @@ TELEGRAM_CHAT_ID = os.getenv('CHAT_ID')
 RETRY_TIME = 600
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
+
 REVIEWING = 'reviewing'
+APPROVED = 'approved'
+REJECTED = 'rejected'
+
 HOMEWORK_STATUSES = {
-    'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
+    APPROVED: 'Работа проверена: ревьюеру всё понравилось. Ура!',
     REVIEWING: 'Работа взята на проверку ревьюером.',
-    'rejected': 'Работа проверена: у ревьюера есть замечания.'
+    REJECTED: 'Работа проверена: у ревьюера есть замечания.'
 }
 
 TOKENS = {
@@ -43,15 +47,15 @@ def init_logger():
         format='%(asctime)s, %(levelname)s, %(message)s, %(name)s'
     )
 
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.INFO)
+    logger_init = logging.getLogger(__name__)
+    logger_init.setLevel(logging.INFO)
     handler = logging.StreamHandler()
     formatter = logging.Formatter(
         '%(asctime)s %(levelname)s %(message)s'
     )
     handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    return logger
+    logger_init.addHandler(handler)
+    return logger_init
 
 
 logger = init_logger()
@@ -133,16 +137,17 @@ def check_response(response: Dict[str, Union[List, int]]) -> List[Dict]:
         Exception: An error occurred during api response check
 
     """
-    if not isinstance(response['homeworks'], list):
-        message = 'Ответ с домашними заданиями пришел не в виде списка'
-        logger.error(message)
-        raise TypeError(message)
     try:
-        return response['homeworks']
+        response['homeworks']
     except KeyError as error:
         message = f'Ключ {error} не присутствует в словаре'
         logger.error(message)
         raise KeyError(message)
+    if not isinstance(response['homeworks'], list):
+        message = 'Ответ с домашними заданиями пришел не в виде списка'
+        logger.error(message)
+        raise TypeError(message)
+    return response['homeworks']
 
 
 def parse_status(homework: Dict[str, Union[str, int]]) -> str:
@@ -212,13 +217,14 @@ def main():
                 send_message(bot, message)
                 logger.debug('В ответе нет новых работ')
                 logger.info(f'Бот отправил сообщение: "{message}"')
+                current_timestamp = response.get('current_date')
                 continue
             elif not response.get('status') == REVIEWING:
                 message = parse_status(check_response_result[0])
                 send_message(bot, message)
                 logger.info(f'Бот отправил сообщение: "{message}"')
+                current_timestamp = response.get('current_date')
                 continue
-            current_timestamp = response.get('current_date')
         except Exception as error:
             if last_error['error'] == error.args:
                 message = (f'Ошибка {error} по-прежнему не решена. '
