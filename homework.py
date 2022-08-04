@@ -219,7 +219,7 @@ def main():
                 logger.info(f'Бот отправил сообщение: "{message}"')
                 current_timestamp = response.get('current_date')
                 continue
-            elif not response.get('status') == REVIEWING:
+            elif response.get('status') != REVIEWING:
                 message = parse_status(check_response_result[0])
                 send_message(bot, message)
                 logger.info(f'Бот отправил сообщение: "{message}"')
